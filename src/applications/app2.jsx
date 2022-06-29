@@ -8,7 +8,7 @@ function App2() {
   useEffect(() => {
     fireAlert('success', 'You entered App 2!');
   }, []);
-  return (<div>App 2</div>);
+  return <div>App 2</div>;
 }
 
 export default App2;
