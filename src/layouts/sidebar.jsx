@@ -1,122 +1,187 @@
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
+import MenuIcon from '@mui/icons-material/Menu';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import {
-  Drawer,
+  Box,
+  Divider,
   List,
-  ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
-  Toolbar,
+  Stack,
+  Tooltip,
+  Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
-// import makeStyles from '@mui/styles/makeStyles';
-// import withStyles from '@mui/styles/withStyles';
-import { useTheme } from '@mui/material/styles';
 import { PropTypes } from 'prop-types';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 
-// const MyListItem = withStyles((theme) => ({
-//   root: {
-//     color: theme.palette.grey['700'],
-//     backgroundColor: theme.palette.white,
-//     '&:hover': {
-//       backgroundColor: theme.palette.primary.light,
-//       color: theme.palette.grey['100'],
-//     },
-//     '&.Mui-selected': {
-//       backgroundColor: theme.palette.primary.main,
-//       color: theme.palette.grey['100'],
-//     },
-//     '&.Mui-selected:hover': {
-//       backgroundColor: theme.palette.primary.light,
-//       color: theme.palette.grey['100'],
-//     },
-//   },
-// }))(ListItem);
+import applications from '../applications/application-list';
+import iconImage from '../assets/logo.png';
+import { IconButton } from '../elements/buttons';
 
-function MyListItem() {
+const drawerOpenWidth = 240;
+const menuIconFontSize = 20;
+const drawerCloseWidth = 16 * 2 * 2 + menuIconFontSize; // 16px is theme.sapcing(2)
+const logoSize = 40;
+
+function MenuItem(props) {
   const theme = useTheme();
+  const { drawerOpen, name, route, icon, index, selectedMenu, setSelectedMenu } = props;
+  const Icon = icon;
 
   return (
-    <ListItem
-      sx={{
-        color: theme.palette.grey['700'],
-        backgroundColor: theme.palette.white,
-        '&:hover': {
-          backgroundColor: theme.palette.primary.light,
-          color: theme.palette.grey['100'],
-        },
-        '&.Mui-selected': {
-          backgroundColor: theme.palette.primary.main,
-          color: theme.palette.grey['100'],
-        },
-        '&.Mui-selected:hover': {
-          backgroundColor: theme.palette.primary.light,
-          color: theme.palette.grey['100'],
+    <Tooltip
+      title={!drawerOpen ? name : ''}
+      placement="right"
+      componentprops={{
+        sx: {
+          backgroundColor: 'gray',
+          color: 'white',
+          boxShadow: '0px 0px 22px -2px rgba(0,0,0,0.20)',
         },
       }}
-    />
+    >
+      <ListItemButton
+        selected={selectedMenu === index}
+        onClick={() => setSelectedMenu(index)}
+        component={RouterLink}
+        to={route}
+        sx={{
+          borderRadius: theme.spacing(1),
+          '&:hover': {
+            backgroundColor: theme.palette.background,
+          },
+          '& .MuiTouchRipple-root': {
+            width: '0px',
+          },
+        }}
+      >
+        <ListItemIcon sx={{ minWidth: menuIconFontSize }}>
+          <Icon sx={{ fontSize: menuIconFontSize, color: theme.palette.body }} />
+        </ListItemIcon>
+        <ListItemText
+          sx={{ visibility: drawerOpen ? 'visible' : 'hidden' }}
+          primary={`     ${name}`}
+          primaryTypographyProps={{ variant: 'subtitle', sx: { whiteSpace: 'pre' } }}
+        />
+      </ListItemButton>
+    </Tooltip>
   );
 }
 
-function Sidebar(props) {
-  const styles = {
-    sidebar: {
-      width: props.sidebarWidth,
-    },
+MenuItem.propTypes = {
+  drawerOpen: PropTypes.bool.isRequired,
+  name: PropTypes.string.isRequired,
+  route: PropTypes.string.isRequired,
+  // eslint-disable-next-line react/forbid-prop-types
+  icon: PropTypes.any.isRequired,
+  index: PropTypes.number.isRequired,
+  selectedMenu: PropTypes.number.isRequired,
+  setSelectedMenu: PropTypes.func.isRequired,
+};
+
+function Sidebar() {
+  const theme = useTheme();
+
+  // listen for css media query match and set drawer's open status
+  // to improve: trigger re-render only once when resize window from xs to sm and vice versa (now it renders twice)
+  const onSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+  const [drawerOpen, setDrawerOpen] = useState(!onSmallScreen);
+  useEffect(() => {
+    setDrawerOpen(!onSmallScreen);
+  }, [onSmallScreen]);
+
+  const toggleDrawer = () => {
+    setDrawerOpen(!drawerOpen);
   };
 
-  const [selectedMenu, setSelectedMenu] = React.useState(1);
+  const [selectedMenu, setSelectedMenu] = useState(
+    window.localStorage.getItem('selectedMenu') ? Number(window.localStorage.getItem('selectedMenu')) : 0
+  );
+  // use local storage to persist menu selected state, an alternative way is to use redux store
+  useEffect(() => {
+    window.localStorage.setItem('selectedMenu', selectedMenu);
+  }, [selectedMenu]);
 
-  const handleMenuItemClick = (event, index) => {
-    setSelectedMenu(index);
-  };
+  const sidebarBodyMenus = (
+    <List sx={{ mt: theme.spacing(3) }}>
+      {applications.map((application, index) => (
+        <MenuItem
+          drawerOpen={drawerOpen}
+          name={application.name}
+          route={application.route}
+          icon={application.icon}
+          index={index}
+          key={application.name}
+          selectedMenu={selectedMenu}
+          setSelectedMenu={setSelectedMenu}
+        />
+      ))}
+    </List>
+  );
+
+  const sidebarFootMenus = (
+    <div>
+      <Divider />
+      <List>
+        <MenuItem
+          drawerOpen={drawerOpen}
+          name="settings"
+          route="/settings"
+          icon={SettingsOutlinedIcon}
+          index={applications.length}
+          selectedMenu={selectedMenu}
+          setSelectedMenu={setSelectedMenu}
+        />
+        <MenuItem
+          drawerOpen={drawerOpen}
+          name="log out"
+          route="/logout"
+          icon={LogoutOutlinedIcon}
+          index={applications.length + 1}
+          selectedMenu={selectedMenu}
+          setSelectedMenu={setSelectedMenu}
+        />
+      </List>
+    </div>
+  );
 
   return (
-    <Drawer variant="permanent" sx={styles.sidebar}>
-      <Toolbar />
-      <List>
-        <MyListItem
-          selected={selectedMenu === 1}
-          onClick={(event) => handleMenuItemClick(event, 1)}
-          component={RouterLink}
-          to="/"
-        >
-          <ListItemIcon>
-            <AddCircleOutlineIcon />
-          </ListItemIcon>
-          <ListItemText>Dashboard</ListItemText>
-        </MyListItem>
-        <MyListItem
-          button
-          selected={selectedMenu === 2}
-          onClick={(event) => handleMenuItemClick(event, 2)}
-          component={RouterLink}
-          to="/app1"
-        >
-          <ListItemIcon>
-            <AddCircleOutlineIcon />
-          </ListItemIcon>
-          <ListItemText>App 1</ListItemText>
-        </MyListItem>
-        <MyListItem
-          button
-          selected={selectedMenu === 3}
-          onClick={(event) => handleMenuItemClick(event, 3)}
-          component={RouterLink}
-          to="/app2"
-        >
-          <ListItemIcon>
-            <AddCircleOutlineIcon />
-          </ListItemIcon>
-          <ListItemText>App 2</ListItemText>
-        </MyListItem>
-      </List>
-    </Drawer>
+    <Box
+      sx={{
+        height: '100%',
+        width: drawerOpen ? drawerOpenWidth : drawerCloseWidth,
+        borderRight: `1px solid ${theme.palette.background}`,
+        transition: theme.transitions.create('width', {
+          easing: theme.transitions.easing.sharp,
+          duration: drawerOpen ? theme.transitions.duration.enteringScreen : theme.transitions.duration.leavingScreen,
+        }),
+      }}
+    >
+      <Stack
+        direction="column"
+        justifyContent="space-between"
+        sx={{ px: theme.spacing(2), py: theme.spacing(3), height: '100%', boxSizing: 'border-box' }}
+      >
+        <div>
+          <Stack direction="row" justifyContent={drawerOpen ? 'space-between' : 'center'}>
+            <Box sx={{ display: drawerOpen ? 'flex' : 'none', alignItems: 'center' }}>
+              <img src={iconImage} alt="app icon" width={logoSize} height={logoSize} />
+              <Typography variant="title" nowrap="true" sx={{ ml: theme.spacing(1) }}>
+                MY APP
+              </Typography>
+            </Box>
+            <IconButton icon={MenuIcon} onClick={toggleDrawer} />
+          </Stack>
+          {sidebarBodyMenus}
+        </div>
+        {sidebarFootMenus}
+      </Stack>
+    </Box>
   );
 }
-
-Sidebar.propTypes = {
-  sidebarWidth: PropTypes.number.isRequired,
-};
 
 export default Sidebar;
