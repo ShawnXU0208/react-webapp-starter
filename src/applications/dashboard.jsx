@@ -1,23 +1,15 @@
-import { Button } from '@mui/material';
 import React, { useEffect } from 'react';
 
 import { useAlert } from '../contexts/alert-message';
 
 function Dashboard() {
-  const showAlert = useAlert();
+  const fireAlert = useAlert();
 
   useEffect(() => {
-    console.log('re-render dashboard component');
-  });
+    fireAlert('success', 'You entered Dashboard!');
+  }, []);
 
-  const setState = () => {
-    showAlert('success', 'dashboard is rendered');
-  };
-  return (
-    <div>
-      Dashboard <Button onClick={setState}>Change State</Button>
-    </div>
-  );
+  return <div>Dashboard</div>;
 }
 
 export default Dashboard;

@@ -1,45 +1,47 @@
 import { Alert, Snackbar } from '@mui/material';
 import { PropTypes } from 'prop-types';
-import React from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
-const AlertMessageContext = React.createContext();
-
-const alertReducer = (state, action) => {
-  switch (action.type) {
-    case 'open':
-      return {
-        type: action.payload.type,
-        text: action.payload.text,
-        open: true,
-      };
-    case 'close':
-      return { type: 'success', text: '', open: false };
-    default:
-      throw new Error();
-  }
-};
+const AlertMessageContext = createContext();
 
 function AlertMessageProvider({ children }) {
-  const [alert, dispatchAlert] = React.useReducer(alertReducer, {
-    type: 'success',
-    text: '',
-    open: false,
-  });
+  const [alertPack, setAlertPack] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState(undefined);
+  const [alertType, setAlertType] = useState('success');
 
-  const fireAlert = React.useCallback((type, text) => {
-    dispatchAlert({ type: 'open', payload: { type, text } });
+  useEffect(() => {
+    if (alertPack.length && !message) {
+      setOpen(true);
+      setMessage(alertPack[0].message);
+      setAlertType(alertPack[0].alertType);
+      setAlertPack((prev) => prev.slice(1));
+    } else if (alertPack.length && message && open) {
+      setOpen(false);
+    }
+  }, [alertPack, open, message, alertType]);
+
+  const fireAlert = useCallback((type, text) => {
+    setAlertPack((prev) => [...prev, { message: text, alertType: type }]);
   }, []);
 
   return (
     <AlertMessageContext.Provider value={fireAlert}>
       <Snackbar
-        open={alert.open}
-        autoHideDuration={6000}
+        open={open}
+        autoHideDuration={3000}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        onClose={() => dispatchAlert({ type: 'close' })}
+        onClose={() => {
+          setOpen(false);
+        }}
+        TransitionProps={{
+          onExited: () => {
+            setMessage(undefined);
+          },
+        }}
       >
-        <Alert onClose={() => dispatchAlert({ type: 'close' })} severity={alert.type}>
-          {alert.text}
+        <Alert onClose={() => setOpen(false)} severity={alertType}>
+          {message}
         </Alert>
       </Snackbar>
 
@@ -52,6 +54,6 @@ AlertMessageProvider.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
-const useAlert = () => React.useContext(AlertMessageContext);
+const useAlert = () => useContext(AlertMessageContext);
 
 export { AlertMessageProvider, useAlert };
