@@ -164,7 +164,7 @@ function Sidebar() {
       <Stack
         direction="column"
         justifyContent="space-between"
-        sx={{ px: theme.spacing(2), py: theme.spacing(3), height: '100%', boxSizing: 'border-box' }}
+        sx={{ px: theme.spacing(2), py: theme.spacing(3), height: '100%', boxSizing: 'border-box', overflow: 'hidden' }}
       >
         <div>
           <Stack direction="row" justifyContent={drawerOpen ? 'space-between' : 'center'}>
