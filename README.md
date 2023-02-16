@@ -2,7 +2,7 @@
 ### introdcution
 a react webapplication with sidebar, headbar and routes set up.
 ### setup
-1. `gitclone https://github.com/ShawnXU0208/react-webapp-starter.git`
+1. `git clone https://github.com/ShawnXU0208/react-webapp-starter.git`
 2. `cd react-webapp-starter`
 3. `yarn install`
 4. `yarn start` - to start a webpack dev server
